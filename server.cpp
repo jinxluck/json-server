@@ -8,10 +8,11 @@
  *      	fork on new connection
  */
 #include "server.h"
-//#include adc header (for return temp function!)
+#include "adc_temp.h"
 
 //shared libraries
 #include <stdlib.h>
+#include <stdio.h>
 #include <syslog.h>
 #include <unistd.h>
 
@@ -33,15 +34,60 @@
  * 		in the new fork/string handle the new connection
  * 		has to take the command "GET TEMP" to read out temp from glob var
  */
+
+void *client_thread(void *client_func)
+{
+	syslog(LOG_NOTICE, "Client thread started");
+	int new_socket, msgrecv;
+	new_socket = *(int *) client_func;
+	char buffer[20] = {0};
+	char return_msg[30] =  {0};
+	float temp_val;
+
+	while(1)
+	{
+		if ((msgrecv = recv(new_socket, buffer, 20, 0)) == -1) {
+			syslog(LOG_NOTICE, "daemon server: message fail");
+		} else {
+			syslog(LOG_NOTICE, "daemon server: message recieved");
+		}
+
+		if(strncmp(buffer, "GET TEMP", strlen("GET TEMP")) == 0)
+		{
+			temp_val = RETURN_TEMP();
+			snprintf(return_msg,10,"%f", temp_val);
+			strcat(return_msg," \n");
+
+			send(new_socket, return_msg, strlen(return_msg), 0);
+
+			memset(buffer, 0, strlen(buffer));
+			memset(return_msg, 0, strlen(return_msg));
+		}
+		else if(strncmp(buffer, "QUIT", strlen("QUIT")) == 0)
+		{
+			memset(buffer, 0, strlen(buffer));
+			close(new_socket);
+			return 0;
+		}
+		else
+		{
+			strncpy(return_msg, "Wrong command... \n", strlen("Wrong command... \n"));
+			send(new_socket, return_msg, strlen(return_msg), 0);
+			memset(buffer, 0, strlen(buffer));
+			memset(return_msg, 0, strlen(return_msg));
+		}
+	}
+	return 0;
+}
+
 void *socket_thread(void *socket_func) {
-	int server_fd, new_socket, msgrecv;
+	int server_fd, new_socket;
 	struct sockaddr_in adress;
 	int opt = 1;
 	int addrlen = sizeof(adress);
-	//{0} sets whole string to 0's
-	char buffer[20] = { 0 };
 	//greeting
-	const char *greeting = "Welcome to daemon server \n QUIT to close connection \n QUIT! to shutdown daemon \n";
+	const char *greeting = "Welcome to daemon server \n QUIT to close connection "
+			"\n GET TEMP to get the temperature \n";
 
 	//create socket file descriptor
 	if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
@@ -72,9 +118,10 @@ void *socket_thread(void *socket_func) {
 		syslog(LOG_NOTICE, "server start: bind success");
 	}
 
+	//customer service
 	while (1) {
 		if (listen(server_fd, 1) < 0) {
-			syslog(LOG_NOTICE, "daemon server: server listen");
+			syslog(LOG_NOTICE, "daemon server: server listen failed");
 			exit(EXIT_FAILURE);
 		}
 
@@ -85,55 +132,11 @@ void *socket_thread(void *socket_func) {
 		} else {
 			syslog(LOG_NOTICE, "Daemon server: client accepted");
 			send(new_socket, greeting, strlen(greeting), 0);
+
+			pthread_t client_id;
+			pthread_create(&client_id, NULL, client_thread, &new_socket);
 		}
 
-		while (1) {
-			if ((msgrecv = recv(new_socket, buffer, 20, 0)) == -1) {
-				syslog(LOG_NOTICE, "daemon server: message fail");
-			} else {
-				syslog(LOG_NOTICE, "daemon server: message recieved");
-				send(new_socket, buffer, strlen(buffer), 0);
-			}
-
-			if (buffer[0] == 'Q') {
-				if (buffer[1] == 'U') {
-					if (buffer[2] == 'I') {
-						if (buffer[3] == 'T') {
-							break;
-						}
-					}
-					{
-						buffer[0] = '\0';
-					}
-				}
-				{
-					buffer[0] = '\0';
-				}
-			} else {
-				buffer[0] = '\0';
-			}
-		}
-		if((close(new_socket))==0)
-		{
-			syslog(LOG_NOTICE, "Client socket closed");
-		}
-		else
-		{
-			syslog(LOG_NOTICE, "Client closing failed");
-		}
-		if (buffer[4] == '!') {
-			if((close(server_fd))==0)
-			{
-				syslog(LOG_NOTICE, "Server socket closed");
-			}
-			else
-			{
-				syslog(LOG_NOTICE, "Socket closing failed");
-			}
-			break;
-		} else {
-			buffer[0] = '\0';
-		}
 	}
 
 	return NULL;
@@ -151,7 +154,5 @@ void INIT_SERVER(void)
 	pthread_t thread_id;
 
 	pthread_create(&thread_id, NULL, socket_thread, NULL);
-
-	pthread_join(thread_id, NULL);
 }
 

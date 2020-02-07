@@ -7,26 +7,19 @@
 
 #ifndef ADC_TEMP_H_
 #define ADC_TEMP_H_
-/*adc header file
- *
- * init_adc
- * 	setup gpio's through fx. system()
- * 	void return
- * 	void arguments
-*/
-void INIT_ADC(void);
+//adc header file
 
 /*
  * read_adc/temp
  * 	check adc value
- * 	convert value
- * 	global_variable = converted value
+ * 	global_variable = adc value
  */
 void READ_TEMP(void);
 
 /*
  * return_temp
- * 	return global_variable
+ * 	convert adc value
+ * 	return converted value
  */
 float RETURN_TEMP(void);
 

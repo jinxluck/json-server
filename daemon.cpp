@@ -26,22 +26,23 @@ void INIT_DAEMON(void)
 	//error checks:
 	//if fork gives negative value, it was unsuccessful
 	if (pid < 0)
+	{
+		syslog(LOG_NOTICE, "Daemon parent fork failure");
 		exit(EXIT_FAILURE);
+	}
 
 	//if fork gives positive value, it was successful
 	//if successful, kill the parent
 	if (pid > 0)
+	{
+		syslog(LOG_NOTICE, "Daemon parent fork Success");
 		exit(EXIT_SUCCESS);
+	}
 
 	//the child becomes session leader
 	//returns -1 if error occurred
 	if (setsid() < 0)
 		exit(EXIT_FAILURE);
-
-	//signal handling
-	//has to be filled out, either ignore og handle
-	signal(SIGCHLD, SIG_IGN);
-	signal(SIGHUP, SIG_IGN);
 
 	//fork a second time to ensure no zombies
 	pid = fork();
@@ -49,12 +50,18 @@ void INIT_DAEMON(void)
 	//error checks:
 	//if fork gives negative value, it was unsuccessful
 	if (pid < 0)
+	{
+		syslog(LOG_NOTICE, "Daemon child fork failure");
 		exit(EXIT_FAILURE);
+	}
 
 	//if fork gives positive value, it was successful
 	//if successful, kill the parent
 	if (pid > 0)
+	{
+		syslog(LOG_NOTICE, "Daemon child fork Success");
 		exit(EXIT_SUCCESS);
+	}
 
 	//set file permissions
 	//umask(0) = file is world-writeable
@@ -70,6 +77,8 @@ void INIT_DAEMON(void)
 	{
 		close(x);
 	}
+
+	syslog(LOG_NOTICE, "The deamon is alive!");
 }
 
 
