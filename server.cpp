@@ -26,7 +26,6 @@
 
 #define PORT 1955
 
-
 /*
  *  socket function
  * 	changes compared to former project:
@@ -66,6 +65,7 @@ void *client_thread(void *client_func)
 		else if(strncmp(buffer, "QUIT", strlen("QUIT")) == 0)
 		{
 			memset(buffer, 0, strlen(buffer));
+			syslog(LOG_NOTICE, "Client kill");
 			close(new_socket);
 			return 0;
 		}
@@ -136,7 +136,6 @@ void *socket_thread(void *socket_func) {
 			pthread_t client_id;
 			pthread_create(&client_id, NULL, client_thread, &new_socket);
 		}
-
 	}
 
 	return NULL;

@@ -43,9 +43,9 @@ float RETURN_TEMP(void)
 {
 	float temp = 0;
 
-	temp = (LAST_ADC_VAL*1.8)/4095;
-	temp = temp/0.01;
-
+	temp = LAST_ADC_VAL*(1.8f/4096.0f);
+	//temp = temp/0.01;
+	temp = temp*100;
 	return temp;
 }
 

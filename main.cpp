@@ -15,8 +15,7 @@
 
 void kill_sig(int sig, siginfo_t *siginfo, void *context)
 {
-	syslog(LOG_NOTICE, "Daemon kill!");
-
+	syslog(LOG_NOTICE, "Daemon kill!!");
 	exit(0);
 }
 

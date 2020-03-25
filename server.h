@@ -15,5 +15,4 @@
 void INIT_SERVER(void);
 
 
-
 #endif /* SERVER_H_ */
