@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../GPIO_controle.cpp \
 ../adc_temp.cpp \
 ../daemon.cpp \
 ../main.cpp \
@@ -11,6 +12,7 @@ CPP_SRCS += \
 ../timer.cpp 
 
 OBJS += \
+./GPIO_controle.o \
 ./adc_temp.o \
 ./daemon.o \
 ./main.o \
@@ -18,6 +20,7 @@ OBJS += \
 ./timer.o 
 
 CPP_DEPS += \
+./GPIO_controle.d \
 ./adc_temp.d \
 ./daemon.d \
 ./main.d \
@@ -29,7 +32,7 @@ CPP_DEPS += \
 %.o: ../%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: Cross G++ Compiler'
-	arm-linux-gnueabihf-g++ -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
+	arm-linux-gnueabihf-g++ -I/usr/include/rapidjson/ -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

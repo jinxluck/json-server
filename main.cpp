@@ -38,7 +38,7 @@ int main(void)
 
 	INIT_SERVER();
 
-	INIT_TIMER(15,0);
+	INIT_TIMER(1,0);
 
 	return 0;
 }
